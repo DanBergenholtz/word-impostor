@@ -108,6 +108,7 @@ class Game():
         for player in self.players:
             player.send(won_lost_msg)
             player.send(impostor_msg)
+            player.last_msg = None
             
         #resets game state
         self.players_in_lobby = []
@@ -142,7 +143,7 @@ class Game():
             timer -= 1
             time.sleep(0.1)
 
-        if player.last_msg.get("text") == "game over":
+        if player.last_msg == "game over":
             player.last_msg = None
             return "game over"
         
@@ -176,9 +177,12 @@ class Game():
         while len(votes) < len(self.players) - len(self.eliminated_players):
             for p in self.players:
                 if p.last_msg is not None: 
-                    votes[p.username] = p.last_msg.get("vote")
-                    p.last_msg = None
-                    print(f"Vote received from {p.username}")
+                    if p.last_msg == "game over":
+                        return "game over"
+                    else:
+                        votes[p.username] = p.last_msg.get("vote") #will be a username or skip
+                        p.last_msg = None
+                        print(f"Vote received from {p.username}")
 
             time.sleep(0.01)
         
@@ -280,8 +284,8 @@ def handle_player(player, game):
             
             elif message.get("text") == "game over":
                 game.keep_playing = False
-                player.last_msg = None
-                #game.reset_to_lobby()
+                player.last_msg = message.get("text")
+                # player.last_msg = None
             
             elif message.get("type") == "back to lobby":
                 game.players_in_lobby.append(player.username)
@@ -416,13 +420,12 @@ if __name__ == "__main__":
 
                 for current_player in round_order:
                     if game.keep_playing:
+
                         game.active_player(current_player.username)
                         clue = game.give_clue(current_player, game)
 
-                        # if current_player not in game.clue_history.keys():
-                        #     game.clue_history[current_player] = [clue]
-                        # else:
-                        #     game.clue_history[current_player].append(clue)
+                        if clue == "game over":
+                            break
 
                         game.clue_history[current_player] = [clue]
                         clue_hist = game.send_clue_history()
@@ -435,6 +438,8 @@ if __name__ == "__main__":
                     break
 
                 voted_out = game.vote() #username of player who is voted out, or None if tie, or "skip" if vote skip
+                if voted_out == "game over":
+                    break
                 print(f"{voted_out} was voted out.")
         
                 if voted_out is not None:

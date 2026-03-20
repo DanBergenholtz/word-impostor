@@ -392,7 +392,6 @@ class GameView(BaseView):
         self.clue_text.tag_configure("green_text", foreground="green")
         self.clue_text.tag_configure("bold_text", font=("TkDefaultFont", 12, "bold"))
 
-        # self.end_btn = tk.Button(self.control_frame, text="End game", command=self.master.game_over)
         self.end_btn = tk.Button(self.control_frame, text="End game", command=self.end_game)
         self.end_btn.config(state="active")
         self.end_btn.pack(pady=10, anchor="center")
