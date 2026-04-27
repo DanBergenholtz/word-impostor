@@ -24,9 +24,11 @@ class PlayerClient:
         self.portrait_map = {}
         self.eliminated = []
         self.impostor = None
+        self.second_impostor = None
         self.impostor_won = False
         self.active_player = None
         self.unavailable_portraits = []
+        self.two_impostors = False
 
         threading.Thread(target=self.listen, daemon=True).start()
 
@@ -255,7 +257,6 @@ class StartView(tk.Frame):
     def select_portrait(self, idx):
         if str(idx) in (self.client.unavailable_portraits or []):
             messagebox.showwarning("Unavailable", "This character is already taken.", parent=self)
-            print(self.client.unavailable_portraits)
             return
 
         self.selected_index = idx
@@ -449,6 +450,9 @@ class GameView(BaseView):
                 if msg.get("type") == "portraits":
                     self.client.portrait_map = msg.get("portraits")
 
+                if msg.get("type") == "two impostors in the game":
+                    self.client.two_impostors = True
+
                 if msg.get("text") == "You are the impostor!":
                     self.word_or_imp_label.config(text="You are the impostor!", fg="red")
 
@@ -515,29 +519,44 @@ class GameView(BaseView):
                                 self.client.eliminated.append(elim)
                                 portrait_frame = self.player_portraits[elim]
                                 portrait_frame.config(highlightbackground="red", highlightthickness=5)
+                    
+                    elif msg.get("result") == "An impostor has been eliminated":
+                        for elim in msg.get("eliminated players", ''):
+                            if elim not in self.client.eliminated :
+
+                                self.clue_text.config(state="normal")
+                                self.clue_text.insert(tk.END, f"Impostor {elim} has been voted out! One impostor remains...\n", ("red_text", "bold_text"))
+                                self.clue_text.config(state="disabled")
+
+                                self.client.eliminated.append(elim)
+                                portrait_frame = self.player_portraits[elim]
+                                portrait_frame.config(highlightbackground="red", highlightthickness=5)
 
                     self.skip_vote_btn.config(state="disabled")
 
-                # if msg.get("type") == "skip":
-                #     self.clue_text.config(state="normal")
-                #     self.clue_text.insert(tk.END, "Voting skipped. The game goes on....\n", ("green_text", "bold_text"))
-                #     self.clue_text.config(state="disabled")
-                
-                # if msg.get("type") == "tie vote":
-                #     self.clue_text.config(state="normal")
-                #     self.clue_text.insert(tk.END, "No player was voted out. The game goes on....\n", ("green_text", "bold_text"))
-                #     self.clue_text.config(state="disabled")
-        
-                if msg.get("text") == "Impostor lost":
-                    self.client.impostor_won = False
-                
-                if msg.get("text") == "Impostor won":
-                    self.client.impostor_won = True
+                if not self.client.two_impostors:
+                    if msg.get("text") == "Impostor lost":
+                        self.client.impostor_won = False
+                    
+                    if msg.get("text") == "Impostor won":
+                        self.client.impostor_won = True
 
-                if msg.get("type") == "Reveal impostor":
-                    self.client.impostor = msg.get("impostor", "")
-                    self.master.game_over()
-                    return
+                    if msg.get("type") == "Reveal impostor":
+                        self.client.impostor = msg.get("impostor", "")
+                        self.master.game_over()
+                        return
+                else:
+                    if msg.get("text") == "Impostors lost":
+                        self.client.impostor_won = False
+                    
+                    if msg.get("text") == "Impostors won":
+                        self.client.impostor_won = True
+
+                    if msg.get("type") == "Reveal impostors":
+                        self.client.impostor = msg.get("impostor 1", "")
+                        self.client.second_impostor = msg.get("impostor 2", "")
+                        self.master.game_over()
+                        return
                 
                 if msg.get("time") is not None:
                     self.timer.config(text=str(int(msg["time"])))
@@ -628,37 +647,85 @@ class GameOverView(BaseView):
         if hasattr(self, "bottom_text"):
             self.bottom_text.destroy()
 
-        impostor = self.client.impostor
+        if not self.client.two_impostors:
+            impostor = self.client.impostor
 
-        # Portrait frame
-        self.portrait_frame = tk.Frame(
-            self.control_frame,
-            width=180,
-            height=180,
-            bg="#02085c",
-            highlightbackground="white",
-            highlightthickness=3
-        )
-        self.portrait_frame.pack()
-        self.portrait_frame.pack_propagate(False)
+            # Portrait frame
+            self.portrait_frame = tk.Frame(
+                self.control_frame,
+                width=180,
+                height=180,
+                bg="#02085c",
+                highlightbackground="white",
+                highlightthickness=3
+            )
+            self.portrait_frame.pack()
+            self.portrait_frame.pack_propagate(False)
 
-        if impostor in self.client.portrait_map:
-            portrait_file = self.client.portrait_map[impostor]
+            if impostor in self.client.portrait_map:
+                portrait_file = self.client.portrait_map[impostor]
 
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            sprite_dir = os.path.join(base_dir, "Sprites")
-            path = os.path.join(sprite_dir, portrait_file)
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                sprite_dir = os.path.join(base_dir, "Sprites")
+                path = os.path.join(sprite_dir, portrait_file)
 
-            img = tk.PhotoImage(file=path)
-            img = img.subsample(2, 2)
+                img = tk.PhotoImage(file=path)
+                img = img.subsample(2, 2)
 
-            label = tk.Label(self.portrait_frame, image=img, bg="#02085c")
-            label.image = img
-            label.pack(expand=True)
+                label = tk.Label(self.portrait_frame, image=img, bg="#02085c")
+                label.image = img
+                label.pack(expand=True)
+                
+            # Text below portrait
+            self.bottom_text = tk.Label(self.control_frame, text=f"The impostor was {impostor}!", fg="white", bg="#02085c", font=("Arial", 14))
+            self.bottom_text.pack(pady=(20, 10))
+
+        else: #ALL CHATGPT BELOW
+            impostor1 = self.client.impostor
+            impostor2 = self.client.second_impostor
+
+            self.portrait_frame = tk.Frame(
+                self.control_frame,
+                bg="#02085c"
+            )
+            self.portrait_frame.pack()
+
+            frame1 = tk.Frame(self.portrait_frame, width=180, height=180,
+                            bg="#02085c", highlightbackground="white", highlightthickness=3)
+            frame1.pack(side="left", padx=20)
+            frame1.pack_propagate(False)
+
+            frame2 = tk.Frame(self.portrait_frame, width=180, height=180,
+                            bg="#02085c", highlightbackground="white", highlightthickness=3)
+            frame2.pack(side="left", padx=20)
+            frame2.pack_propagate(False)
+
+            def render(frame, name):
+                if name in self.client.portrait_map:
+                    portrait_file = self.client.portrait_map[name]
+                    base_dir = os.path.dirname(os.path.abspath(__file__))
+                    sprite_dir = os.path.join(base_dir, "Sprites")
+                    path = os.path.join(sprite_dir, portrait_file)
+
+                    img = tk.PhotoImage(file=path)
+                    img = img.subsample(2, 2)
+
+                    label = tk.Label(frame, image=img, bg="#02085c")
+                    label.image = img
+                    label.pack(expand=True)
+
+            render(frame1, impostor1)
+            render(frame2, impostor2)
+
+            self.bottom_text = tk.Label(
+                self.control_frame,
+                text=f"The impostors were {impostor1} and {impostor2}!",
+                fg="white",
+                bg="#02085c",
+                font=("Arial", 14)
+            )
+            self.bottom_text.pack(pady=(20, 10))
             
-        # Text below portrait
-        self.bottom_text = tk.Label(self.control_frame, text=f"The impostor was {impostor}!", fg="white", bg="#02085c", font=("Arial", 14))
-        self.bottom_text.pack(pady=(20, 10))
 
     def to_lobby(self):
         lobby_msg = {
@@ -670,6 +737,7 @@ class GameOverView(BaseView):
         self.client.impostor = None
         self.client.impostor_won = False
         self.client.active_player = None
+        self.client.two_impostors = False
 
         self.master.back_to_lobby()
 

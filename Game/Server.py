@@ -4,6 +4,7 @@ import threading
 import json
 import time
 import os
+import numpy as np
 
 class Player():
 
@@ -30,9 +31,11 @@ class Game():
         self.players_in_lobby = []
         self.eliminated_players = []
         self.impostor_in_game = True
+        self.two_impostors = False
         self.word_category = None
         self.secret_word = None
         self.impostor = None
+        self.second_impostor = None
         self.clue_history = {}
         self.turn_timer = turn_time
         self.chat_history = {}
@@ -40,11 +43,17 @@ class Game():
         self.keep_playing = True
         self.selected_portraits = []
 
-    def start_game(self, words):
-
+    def start_game(self, words, prob = 0.99):
 
         #set up game
-        self.impostor = random.choice(self.players)
+        if random.random() <= prob:
+            imps = np.random.choice(self.players, size=2, replace=False)
+            self.impostor = imps[0]
+            self.second_impostor = imps[1]
+            self.two_impostors = True
+        else:
+            self.impostor = random.choice(self.players)
+        
         self.word_category = random.choice(list(words.keys())) # Pick a random category
         self.secret_word = random.choice(words[self.word_category]) # Pick a random word from that category
 
@@ -77,33 +86,63 @@ class Game():
             "text": "You are the impostor!"
         }
 
+        two_imp_msg = {
+            "type": "two impostors in the game"
+        }
+
         for player in self.players:
             player.send(portraits_msg)
             player.send(players_msg)
             player.send(category_msg)
 
-
-            if player is not self.impostor:
-                player.send(word_msg)
+            if self.two_impostors:
+                player.send(two_imp_msg)
+                if player is not self.impostor and player is not self.second_impostor:
+                    player.send(word_msg)
+                else:
+                    player.send(imp_msg)
+            
             else:
-                player.send(imp_msg)
+                if player is not self.impostor:
+                    player.send(word_msg)
+                else:
+                    player.send(imp_msg)
 
     def reset_to_lobby(self):
         global server_state
 
-        impostor_msg = {
-            "type": "Reveal impostor",
-            "impostor": self.impostor.username
-        }
-        print(f"The impostor was {self.impostor.username}")
-        if not self.impostor_in_game: #Impostor was voted out
-            won_lost_msg = {
-                "text": "Impostor lost"
+        if not self.two_impostors:
+            impostor_msg = {
+                "type": "Reveal impostor",
+                "impostor": self.impostor.username
             }
-        else: #Impostor won
-            won_lost_msg = {
-                "text": "Impostor won"
+            print(f"The impostor was {self.impostor.username}")
+
+            if not self.impostor_in_game: #Impostor was voted out
+                won_lost_msg = {
+                    "text": "Impostor lost"
+                }
+            else: #Impostor won
+                won_lost_msg = {
+                    "text": "Impostor won"
+                }
+
+        else:  #Two impostors
+            impostor_msg = {
+                "type": "Reveal impostors",
+                "impostor 1": self.impostor.username,
+                "impostor 2": self.second_impostor.username
             }
+            print(f"The impostors were {self.impostor.username} and {self.second_impostor.username}")
+
+            if not self.impostor_in_game: #Impostor was voted out
+                won_lost_msg = {
+                    "text": "Impostors lost"
+                }
+            else: #Impostor won
+                won_lost_msg = {
+                    "text": "Impostors won"
+                }
         for player in self.players:
             player.send(won_lost_msg)
             player.send(impostor_msg)
@@ -115,7 +154,9 @@ class Game():
         self.clue_history = {}
         self.chat_history = {}
         self.impostor_in_game = True
+        self.two_impostors = False
         self.impostor = None
+        self.second_impostor = None
         self.word_category = None
         self.secret_word = None
 
@@ -215,6 +256,13 @@ class Game():
             msg = {
                 "type" : "voting results",
                 "result" : "vote tied"
+            }
+        
+        elif flag == "two impostors":
+            msg = {
+                "type": "voting results",
+                "result": "An impostor has been eliminated",
+                "eliminated players": self.eliminated_players
             }
 
         else: 
@@ -454,19 +502,29 @@ if __name__ == "__main__":
                 if voted_out == "game over":
                     break
                 print(f"{voted_out} was voted out.")
-        
+
                 if voted_out is not None:
-                    if voted_out == game.impostor.username:
-                        game.eliminated_players.append(voted_out)
-                        game.voted_out_message()
-                        game.impostor_in_game = False
-                    
-                    elif voted_out == "skip":
+                    if voted_out == "skip":
                         game.voted_out_message(flag="vote skipped")
 
                     else:
                         game.eliminated_players.append(voted_out)
-                        game.voted_out_message()
+
+                        if game.two_impostors:
+                            if voted_out == game.impostor.username or voted_out == game.second_impostor.username:
+                                game.voted_out_message(flag = "two impostors")
+                                game.two_impostors = False
+
+                            else:
+                                game.voted_out_message()
+
+                        else:
+                            if voted_out == game.impostor.username:
+                                game.voted_out_message()
+                                game.impostor_in_game = False
+                            else:
+                                game.voted_out_message()
+
                 else:
                     game.voted_out_message(flag="vote tied")
             

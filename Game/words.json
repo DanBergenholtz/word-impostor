@@ -1,0 +1,41 @@
+{
+  "Food": ["apple","banana","pizza","burger","sushi","pasta","cheese","chocolate","tomato","bread","salad","steak","ice cream","carrot","onion","potato","chicken","beef","pork","fish","shrimp","lobster","crab","egg","milk","butter","yogurt","cream","rice","noodles","dumpling","taco","burrito","sandwich","hotdog","fries","ketchup","mustard","mayonnaise","pepper","salt","garlic","ginger","lettuce","cabbage","spinach","broccoli","cauliflower","zucchini","cucumber","eggplant","corn","peas","beans","lentils","chickpeas","tofu","mushroom","bacon","sausage","ham","turkey","duck","lamb","salmon","tuna","cod","oyster","clam","scallop","pancake","waffle","cake","cookie","brownie","donut","pie","cupcake","candy","honey","jam","jelly","syrup","granola","cereal","oatmeal","bagel","croissant","pretzel","quiche","lasagna","spaghetti","macaroni","risotto","paella","curry","soup","stew","chili","ramen"],
+
+  "Sport": ["soccer","basketball","tennis","swimming","volleyball","cricket","hockey","golf","baseball","cycling","skiing","boxing","rugby","skateboarding","badminton","table tennis","surfing","snowboarding","karate","judo","taekwondo","fencing","archery","rowing","canoeing","kayaking","triathlon","marathon","sprinting","high jump","long jump","pole vault","wrestling","gymnastics","weightlifting","powerlifting","crossfit","handball","water polo","lacrosse","field hockey","ice skating","figure skating","speed skating","curling","bobsleigh","luge","skeleton","motorsport","formula one","nascar","rally","drag racing","equestrian","dressage","show jumping","polo","futsal","beach volleyball","softball","ultimate frisbee","darts","snooker","pool","bowling","chess","esports","climbing","bouldering","mountaineering","parkour","freerunning","kite surfing","windsurfing","sailing","diving","synchronized swimming","biathlon","decathlon","heptathlon","orienteering","fishing","hunting","sumo","kabaddi","sepaktakraw","gaelic football","hurling","australian football","netball","korfball","floorball","bandy","ringette","pickleball","paddle tennis"],
+
+  "Countries": ["sweden","brazil","japan","canada","germany","india","france","italy","mexico","norway","china","egypt","argentina","spain","thailand","usa","uk","finland","denmark","poland","netherlands","belgium","switzerland","austria","greece","turkey","iran","iraq","saudi arabia","uae","qatar","israel","south africa","nigeria","kenya","ethiopia","morocco","algeria","tunisia","libya","australia","new zealand","indonesia","philippines","vietnam","malaysia","singapore","south korea","north korea","mongolia","kazakhstan","uzbekistan","pakistan","bangladesh","nepal","sri lanka","peru","chile","colombia","venezuela","cuba","jamaica","haiti","dominican republic","bolivia","paraguay","uruguay","iceland","ireland","portugal","czech republic","slovakia","hungary","romania","bulgaria","croatia","serbia","slovenia","bosnia","estonia","latvia","lithuania","luxembourg","malta","cyprus","afghanistan","myanmar","laos","cambodia","brunei","fiji","papua new guinea","madagascar","zimbabwe","zambia","uganda"],
+
+  "Furniture": ["table","chair","desk","bed","sofa","couch","shelf","cabinet","drawer","stool"],
+
+  "Electronics": ["phone","smartphone","computer","laptop","keyboard","mouse","monitor","printer","scanner","camera","television","remote","speaker","headphones","earbuds","microphone"],
+
+  "Office Supplies": ["book","notebook","pen","pencil","eraser","marker","ruler","highlighter","stapler","paper"],
+
+  "Personal Items": ["backpack","bag","wallet","key","lock","phone charger","watch","sunglasses","umbrella","passport"],
+
+  "Home Structure": ["door","window","mirror","picture","frame","curtain","carpet","rug","ceiling","floor"],
+
+  "Kitchenware": ["cup","mug","glass","plate","bowl","fork","knife","spoon","pan","pot"],
+
+  "Appliances": ["stove","oven","microwave","refrigerator","freezer","toaster","blender","kettle","fan","heater","air conditioner"],
+
+  "Containers": ["bottle","can","box","basket","bucket","jar","container","tub","crate","tank"],
+
+  "Tools": ["rope","chain","hammer","screwdriver","wrench","drill","saw","nail","screw","bolt","ladder"],
+
+  "Cleaning Items": ["broom","mop","vacuum","brush","towel","sponge","detergent","bleach","dustpan","rag"],
+
+  "Bedding": ["blanket","pillow","mattress","duvet","sheet","pillowcase","comforter","quilt","bedspread"],
+
+  "Natural Materials": ["rock","stone","sand","soil","fire","lava","ash","smoke","clay","gravel"],
+
+  "Seasons & Climate": ["season","spring","summer","autumn","winter","temperature","climate","humidity","precipitation","forecast"],
+
+  "Ecosystems": ["habitat","wildlife","jungle","savanna","tundra","wetland","reef","coral","rainforest"],
+
+  "Physics": [
+    "force","energy","power","velocity","acceleration","momentum","gravity",
+    "mass","weight","friction","inertia","pressure","density","wave",
+    "frequency","wavelength","electricity","magnetism","quantum","relativity"
+  ]
+}
