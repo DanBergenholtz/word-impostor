@@ -189,13 +189,15 @@ class StartView(tk.Frame):
         super().__init__(master, bg="#02085c")
         self.client = client
 
+        self.active_view = False
+
         self.selected_portraits = None
         self.selected_index = None
         self.portrait_images = []
 
         # Shared portrait identifiers
         self.sprite_files = [
-            "Acorn guy 1.png",
+            "Monkey guy 1.png",
             "Cod guy 3.png",
             "Cat guy 1.png",
             "Crystal guy 1.png",
@@ -250,17 +252,8 @@ class StartView(tk.Frame):
         self.join_btn = tk.Button(self.control_frame, text="Enter Lobby", command=self.join_game)
         self.join_btn.pack()
 
-    # def select_portrait(self, idx):
-    #     if idx in self.client.unavailable_portraits:
-    #         messagebox.showwarning("Unavailable", "This character is already taken.")
-    #     else:
-    #         self.selected_index = idx
-    #         self.client.selected_portrait = self.portrait_images[idx]
-    #         self.client.portrait_id = self.sprite_files[idx]
-    #         self.client.send(str(idx))
-
     def select_portrait(self, idx):
-        if str(idx) in (self.client.unavailable_portraits):
+        if str(idx) in (self.client.unavailable_portraits or []):
             messagebox.showwarning("Unavailable", "This character is already taken.", parent=self)
             print(self.client.unavailable_portraits)
             return
@@ -278,13 +271,17 @@ class StartView(tk.Frame):
             self.master.show_lobby()
 
     def poll_server(self):
+
+        if not self.active_view:
+            return
+        
         while self.client.last_msg:
             try:
                 raw_msg = self.client.last_msg.pop(0)
                 msg = json.loads(raw_msg)
 
                 if msg.get("type") == "Unavailable portraits":
-                    self.client.unavailable_portraits = msg.get("Portraits")
+                    self.client.unavailable_portraits = msg.get("Portraits", [])
 
             except json.JSONDecodeError:
                 pass
@@ -298,6 +295,8 @@ class LobbyView(BaseView):
 
     def __init__(self, master, client):
         super().__init__(master, client)
+
+        self.active_view = False
 
         self.control_frame = tk.Frame(self, bg="#02085c")
         self.control_frame.grid(row=1, column=0, sticky="sw", padx=80, pady=80)
@@ -347,6 +346,10 @@ class LobbyView(BaseView):
         self.chat_box.config(state="disabled")
 
     def poll_server(self):
+
+        if not self.active_view:
+            return
+        
         while self.client.last_msg:
             try:
                 raw_msg = self.client.last_msg.pop(0)
@@ -377,6 +380,8 @@ class GameView(BaseView):
 
     def __init__(self, master, client):
         super().__init__(master, client)
+
+        self.active_view = False
 
         self.voting_active = False
 
@@ -432,6 +437,10 @@ class GameView(BaseView):
         # self.poll_server()
 
     def poll_server(self):
+
+        if not self.active_view:
+            return
+        
         while self.client.last_msg:
             try:
                 raw_msg = self.client.last_msg.pop(0)
@@ -532,6 +541,7 @@ class GameView(BaseView):
                 
                 if msg.get("time") is not None:
                     self.timer.config(text=str(int(msg["time"])))
+                    
 
             except json.JSONDecodeError:
                 pass
@@ -695,17 +705,22 @@ class App(tk.Tk):
         # self.game_over_view = GameOverView(self, self.client)
 
         self.startup.pack_forget()
+        self.start_view.active_view = True
         self.start_view.pack(fill="both", expand=True)
         self.start_view.poll_server()
 
     def show_lobby(self):
         self.game_view.portrait_info()
+        self.start_view.active_view = False
         self.start_view.pack_forget()
+        self.lobby_view.active_view = True
         self.lobby_view.pack(fill="both", expand=True)
         self.lobby_view.poll_server()
         
     def start_game(self):
+        self.lobby_view.active_view = False
         self.lobby_view.pack_forget()
+        self.game_view.active_view = True
         self.game_view.pack(fill="both", expand=True)
         self.game_view.poll_server()
     
@@ -715,6 +730,7 @@ class App(tk.Tk):
         self.game_view.clue_text.config(state="normal")
         self.game_view.clue_text.delete("1.0", "end")
         self.game_view.clue_text.config(state="disabled")
+        self.game_view.active_view = False
         self.game_view.pack_forget()
         self.game_over_view = GameOverView(self, self.client)
         self.game_over_view.pack(fill="both", expand=True)
@@ -722,6 +738,7 @@ class App(tk.Tk):
 
     def back_to_lobby(self):
         self.game_over_view.pack_forget()
+        self.lobby_view.active_view = True
         self.lobby_view.pack(fill="both", expand=True)
         self.lobby_view.poll_server()
         self.lobby_view.ready_btn.config(state="active")
